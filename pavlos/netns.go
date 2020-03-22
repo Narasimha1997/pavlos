@@ -29,7 +29,7 @@ func system(command string, arguments string) {
 func NetworkIfaceSetup(options *ContainerOpts) {
 	id := "213"
 
-	veth := fmt.Sprintf("link add veth%s type veth peer name veth3", id)
+	veth := fmt.Sprintf("link add veth%s type veth peer name veth1", id)
 	system("ip", veth)
 
 	vethUp := fmt.Sprintf("link set veth%s up", id)
@@ -38,14 +38,14 @@ func NetworkIfaceSetup(options *ContainerOpts) {
 
 //NetworkAddNamespace : Adds namespace
 func NetworkAddNamespace(pid int) {
-	vethAddNs := fmt.Sprintf("link set veth3 netns %d", pid)
+	vethAddNs := fmt.Sprintf("link set veth1 netns %d", pid)
 	system("ip", vethAddNs)
 }
 
 //SetupContainerNetworking : Attaches isolated network to container
 func SetupContainerNetworking(options *ContainerOpts, pid int) {
 	system("ip", "link set veth3 up")
-	vethIP := fmt.Sprintf("ip addr add %s/24 dev veth3", options.IP)
+	vethIP := fmt.Sprintf("ip addr add %s/24 dev veth1", options.IP)
 	system("ip", vethIP)
-	system("route", "add default gw 172.16.0.100 veth3")
+	system("route", "add default gw 172.16.0.100 veth1")
 }

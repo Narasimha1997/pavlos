@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -39,6 +40,11 @@ func isolateGPUDevice(gpuDeviceID int, rootFsPath string) {
 }
 
 func makeNvidiaContainerRunime(options *ContainerOpts) {
+
+	if len(options.NvidiaGpus) == 0 {
+		return
+	}
+
 	if !options.Internals.HasNvidiaDevices {
 		panic("NVIDIA container runtime not supported")
 	}
@@ -49,10 +55,29 @@ func makeNvidiaContainerRunime(options *ContainerOpts) {
 	}
 }
 
-func mountFileSystems() {
+func customBind(args []string) {
+	command := exec.Command("mount", args...)
+	must(command.Run())
+}
+
+func addDNS() {
+	//Adds host DNS configuration to container
+	input, err := ioutil.ReadFile("/etc/resolv.conf")
+	must(err)
+
+	must(ioutil.WriteFile("etc/resolv.conf", input, 0664))
+}
+
+func prepareContainerLinux() {
+
+	//file systems
 	must(syscall.Mount("proc", "proc", "proc", 0, ""))
 	must(syscall.Mount("tmp", "tmp", "tmpfs", 0, ""))
-	must(syscall.Mount("sys", "sys", "sysfs", 0, ""))
+	must(syscall.Mount("/sys", "sys", "sysfs", 0, ""))
+	must(syscall.Mount("/dev", "dev", "devtmpfs", syscall.MS_BIND, ""))
+
+	//DNS resolution
+	addDNS()
 }
 
 func unmountFileSystems() {
@@ -86,14 +111,15 @@ func CreateContainer(configFile string) {
 
 	options := LoadConfigFromJSON(configFile)
 
-	if options.IsolationOpts.EnableNetNs {
-		NetworkIfaceSetup(&options)
-	}
-
 	konArgs := append([]string{makeConfigsPassthrough(&options)}, options.RuntimeArgs...)
 	executorHandle := MakeContainerRuntime(&options, konArgs)
+	executorHandle.Stdout = os.Stdout
+	executorHandle.Stderr = os.Stderr
+	executorHandle.Stdin = os.Stdin
+
 	clearSrc := exec.Command("clear")
 	clearSrc.Stdout = os.Stdout
+
 	must(clearSrc.Run())
 	must(executorHandle.Run())
 }
@@ -130,7 +156,7 @@ func ContainerRuntime() {
 	//set up hostname:
 	must(os.Chdir(options.RootFs))
 
-	mountFileSystems()
+	prepareContainerLinux()
 	ResolveRuntimeHooks(&options)
 	must(syscall.Chroot(options.RootFs))
 	must(os.Chdir("/"))
@@ -144,7 +170,9 @@ func ContainerRuntime() {
 
 	containerMust(command.Run())
 
-	system("ip", "link delete veth3")
+	if options.IsolationOpts.EnableNetNs {
+		system("ip", "link delete veth3")
+	}
 	fmt.Println("Container exited")
 
 	//unmountFileSystems()

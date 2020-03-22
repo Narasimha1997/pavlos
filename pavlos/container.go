@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-
 	"github.com/jaypipes/ghw"
 )
 
@@ -78,6 +77,10 @@ func PciDeviceFilter(config *ContainerOpts) {
 
 	config.Internals.Devices = devices
 
+	if len(config.NvidiaGpus) == 0 {
+		return
+	}
+
 	//query for list of supported devices
 	devIndex := 0
 	for _, dev := range devices {
@@ -118,7 +121,7 @@ func ProduceUnsupportedWarnings(config *ContainerOpts) {
 
 	if config.IsolationOpts.EnableNetNs {
 		fmt.Println("[Warning] Network isolation is still beta")
-		config.IsolationOpts.EnableNetNs = false
+		config.IsolationOpts.EnableNetNs = true
 	}
 }
 
@@ -147,7 +150,7 @@ func PrettyPrintConfig(options *ContainerOpts) {
 	fmt.Printf("Root File system : %s\n", options.RootFs)
 	fmt.Println("--- NVIDIA Runtime info ----")
 	fmt.Printf("Requested devices : %v\n", options.NvidiaGpus)
-	if options.Internals.HasNvidiaDevices {
+	if options.Internals.HasNvidiaDevices && len(options.NvidiaGpus) != 0 {
 		fmt.Printf("NVIDA support enabled. GPUs found : \n")
 		for _, deviceIndex := range options.Internals.NvidiaDeviceIndexes {
 			fmt.Print("*   ")
