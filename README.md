@@ -7,14 +7,14 @@ Follow the steps to build Pavlos from source :
 Tools required : golang, git , a working NVIDIA driver and libnvidia-container (for GPU support)
 
 1. #### Download the source
-`
+```
 git clone git@github.com:Narasimha1997/pavlos.git
-`
+```
 
 2. #### Build and install : run build.sh script
-`
+```
 sudo sh ./build.sh
-`
+```
 This will build and install pavlosc ( Container cli ) in /usr/bin
 
 3. #### (Optional) Add NVIDIA support :
@@ -50,9 +50,9 @@ Keys are self-explanatory, specifically `nvidiaGpus` is an array that takes devi
 ##### Running a pavlos container
 To run use the following command : (A root user or a sudo capable user is required)
 
-`
+```
 sudo pavlosc run test-container-config-file.json
-`
+```
 
 For example to run test ubuntu container image presented in the repo :
 `
