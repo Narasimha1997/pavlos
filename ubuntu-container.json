@@ -1,0 +1,15 @@
+{
+    "name" : "TestContainer",
+    "enableIsolation" : true,
+    "enableResourceIsolation" : true,
+    "isolationOptions" : {
+        "enableUTS" : true,
+        "enablePID" : true,
+        "enableRoot" : true,
+        "enableNetNs" : false
+    },
+    "rootFs" : "default",
+    "nvidiaGpus" : [0],
+    "ip" : "172.16.0.12",
+    "runtimeArgs" : ["/bin/bash"]
+}
