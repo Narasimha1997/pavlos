@@ -1,17 +1,18 @@
 #!/bin/bash
 
-#get the package for PCI probe
-go get github.com/jaypipes/ghw
+export GOPATH=${GOPATH}:$(pwd)
 
-BASEDIR=${PWD}
+if [[ "$1" == "pavlos" ]]; then
 
-cd ${BASEDIR}/pavlos
-go build -o pavlosc
-mv ${PWD}/pavlosc ${BASEDIR}/pavlosc
-cd ${BASEDIR}
+    GOBIN=$(pwd)/bin
 
-#attempt to install (if run as root, it will be automatically installed)
-echo "Now the script will install pavlosc in /usr/bin, sudo to continue, Ctrl +C to skip"
-sudo cp pavlosc /usr/bin/
+    go get github.com/Narasimha1997/pavlos
+    go install github.com/Narasimha1997/pavlos
 
-echo "Done"
+    echo "Installing pavlos under /usr/local/bin , enter sudo password"
+    sudo cp $GOBIN/pavlos /usr/local/bin
+fi
+
+if [[ "$1" == "pavlospkg" ]]; then
+    echo "To be implemented"
+fi
