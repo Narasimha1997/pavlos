@@ -11,10 +11,23 @@ Tools required : golang, git , a working NVIDIA driver and libnvidia-container (
 git clone git@github.com:Narasimha1997/pavlos.git
 ```
 
-2. #### Build and install : run build.sh script
+2. #### Build and install in GOPATH
+
+a. Set `$GOPATH`
+``` 
+export GOPATH=${GOPATH}:$(pwd)
 ```
-sudo sh ./build.sh
+b. Install pavlos:
 ```
+go install pavlos
+```
+
+Or you can simply run
+```
+./build.sh pavlos
+```
+This script will build pavlos and install it under `/usr/local/bin`
+
 This will build and install pavlosc ( Container cli ) in /usr/bin
 
 3. #### (Optional) Add NVIDIA support :
@@ -69,9 +82,11 @@ If any nvidia devices are specified, the pavlos container runtime will automatic
 Pavlos automatically copies your host's DNS information (`/etc/resolv.conf`) inside the container, so internet is accessable inside the container.
 
 ### Roadmap : 
-1. Adding network communication between cotainers. (TODO)
-2. Adding cgroup support to customize resource usage (TODO)
-3. More efficient way of handling rootfs images (TODO)
-4. A python script to make custom rootfs images. (TODO)
+1. SW defined container overaly networking (like CNI) (This functionality is broken as of now)
+2. Resource isolation using Linux - cgroups (Partial support is already implemented)
+3. Union File system like the one in Docker (Reduces storage space by reusing existing fs components)
+4. More advanced hardware discovery by traversing PCI Device tree (Partial functionality is already implemented to discover NVIDIA GPUs using jaypipe's [GHW](https://github.com/jaypipes/ghw) library)
+5. Encrypted file-system support (see dm_crypt and cryptmount) using Linux Kernel device-mapper driver.
+6. Volume mounting support like Docker - can mount encrypted volumes as well (See LVM encrypted volume mounting)
 
 
