@@ -13,7 +13,10 @@ import (
 var home string = os.Getenv("HOME")
 
 //DefaultRootFsAbsPath : Default rootfs for kontainer, change this according to your needs
-var DefaultRootFsAbsPath string = filepath.Join(home, ".rootfs")
+var DefaultRootFsAbsPath string = filepath.Join(home, ".rootfs/images")
+
+//DefaultRootFsConfigPath : Default rootfs configs path
+var DefaultRootFsConfigPath string = filepath.Join(home, ".rootfs/configs")
 
 //IsolationOpts : Linux syscall isolation options
 type IsolationOpts struct {
@@ -134,7 +137,18 @@ func ProduceUnsupportedWarnings(config *ContainerOpts) {
 }
 
 //LoadConfigFromJSON : Configuration loader
-func LoadConfigFromJSON(jsonFile string) ContainerOpts {
+func LoadConfigFromJSON(jsonFile string, fromFile bool) ContainerOpts {
+
+	if !fromFile {
+		jsonFile = filepath.Join(DefaultRootFsConfigPath, jsonFile)
+	}
+
+	_, err := os.Stat(jsonFile)
+	if os.IsNotExist(err) {
+		fmt.Printf("Configuration file %s does not exist.\n", jsonFile)
+		os.Exit(0)
+	}
+
 	jsonData, err := ioutil.ReadFile(jsonFile)
 	catchError(err)
 	options := ContainerOpts{}

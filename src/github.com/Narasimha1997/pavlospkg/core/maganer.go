@@ -2,6 +2,7 @@ package core
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -11,7 +12,40 @@ import (
 )
 
 //RootFSRoot : Root-filesystem root path
-var RootFSRoot string = filepath.Join(os.Getenv("HOME"), ".rootfs")
+var RootFSRoot string = filepath.Join(os.Getenv("HOME"), ".rootfs/images")
+
+//RootFSConfigPath : Base filesystem path to save config details
+var RootFSConfigPath string = filepath.Join(os.Getenv("HOME"), ".rootfs/configs")
+
+//IsolationOpts : Linux syscall isolation options
+type IsolationOpts struct {
+	EnableUTS   bool `json:"enableUTS"`   // Unix-Time-Sharing : Host names isolation
+	EnablePID   bool `json:"enablePID"`   // Enables Process Isolation
+	EnableRoot  bool `json:"enableRoot"`  // Enables chroot fs Isolation
+	EnableNetNs bool `json:"enableNetNs"` // Enables Network Namespace isolation (Experimental still!)
+}
+
+//InternalFlags : Internal flags for container configuration, more flags will be added
+type InternalFlags struct {
+	HasNvidiaDevices    bool   `json:"hasNvidia"`
+	NvidiaDeviceIndexes []int  `json:"deviceIdx"`
+	Inet4Address        string `json:"inet4Address"`
+	MappedPorts         []int  `json:"mappedPorts"`
+}
+
+//ContainerOpts : default container option
+type ContainerOpts struct {
+	Name                    string        `json:"name"`
+	EnableIsolation         bool          `json:"enableIsolation"`
+	EnableResourceIsolation bool          `json:"enableResourceIsolation"`
+	IsolationOpts           IsolationOpts `json:"isolationOptions"`
+	RootFs                  string        `json:"rootFs"`
+	NvidiaGpus              []int         `json:"nvidiaGpus"`
+	RuntimeArgs             []string      `json:"runtimeArgs"`
+	Internals               InternalFlags `json:"internals"`
+	InitScript              string        `json:"initScript"`
+	IP                      string        `json:"ip"`
+}
 
 //utility functions:
 
@@ -138,4 +172,77 @@ func SetupDefaultDir() {
 	if os.IsNotExist(err) {
 		os.Mkdir(RootFSRoot, 0700)
 	}
+}
+
+/*
+	Configuration management
+*/
+
+func pathExists(path string) bool {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+//ListSavedConfigs : Lists all config files
+func ListSavedConfigs() {
+	if !pathExists(RootFSConfigPath) {
+		fmt.Println("RootFS config path does not exist")
+		os.Exit(0)
+	}
+
+	files, err := ioutil.ReadDir(RootFSConfigPath)
+	registryPainc(err)
+
+	fmt.Println("Rootfs Configs")
+	fmt.Println("=====================")
+
+	for _, configName := range files {
+		fmt.Printf("%s\n", configName)
+	}
+}
+
+//CreateConfigFromFile : Creates config given a JSON file
+func CreateConfigFromFile(file string, rootfsName string) {
+
+	if !pathExists(file) {
+		fmt.Printf("Configuration source file not found")
+		os.Exit(0)
+	}
+
+	jsonData, err := ioutil.ReadFile(file)
+	registryPainc(err)
+
+	options := ContainerOpts{}
+
+	json.Unmarshal([]byte(jsonData), &options)
+	registryPainc(err)
+
+	options.RootFs = rootfsName
+
+	//save file in registry location
+	byteData, err := json.Marshal(options)
+	registryPainc(err)
+
+	fpOutput := filepath.Join(RootFSConfigPath, rootfsName)
+	err = ioutil.WriteFile(fpOutput, byteData, 0644)
+	registryPainc(err)
+
+	fmt.Printf("Successfully saved configuration %s\n.", rootfsName)
+}
+
+//DeleteRootfsConfig : Delete RootFs configs
+func DeleteRootfsConfig(name string) {
+	path := filepath.Join(RootFSConfigPath, name)
+	_, err := os.Stat(path)
+
+	if os.IsNotExist(err) {
+		fmt.Printf("Configuration %s does not exist", name)
+		os.Exit(0)
+	}
+
+	registryPainc(os.RemoveAll(path))
+	fmt.Printf("deleted %s\n", path)
 }

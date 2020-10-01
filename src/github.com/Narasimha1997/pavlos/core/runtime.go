@@ -100,7 +100,7 @@ func jsonToConfigs(jsonData string, containerConfig *ContainerOpts) {
 }
 
 //CreateContainer : Main function that creates a container
-func CreateContainer(configFile string) {
+func CreateContainer(configFile string, fromFile bool) {
 	_, err := os.Stat(configFile)
 	catchError(err)
 
@@ -109,7 +109,7 @@ func CreateContainer(configFile string) {
 		os.Exit(0)
 	}
 
-	options := LoadConfigFromJSON(configFile)
+	options := LoadConfigFromJSON(configFile, fromFile)
 
 	konArgs := append([]string{makeConfigsPassthrough(&options)}, options.RuntimeArgs...)
 	executorHandle := MakeContainerRuntime(&options, konArgs)

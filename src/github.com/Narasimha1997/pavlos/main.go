@@ -39,7 +39,7 @@ func main() {
 
 	switch argument {
 	case "run":
-		core.CreateContainer(os.Args[2])
+		core.CreateContainer(os.Args[2], false)
 	case "container":
 		core.ContainerRuntime()
 	default:
