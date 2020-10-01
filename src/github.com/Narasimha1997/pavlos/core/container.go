@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/jaypipes/ghw"
 )
 
+var home string = os.Getenv("HOME")
+
 //DefaultRootFsAbsPath : Default rootfs for kontainer, change this according to your needs
-const DefaultRootFsAbsPath = "/home/narasimha/rootfs/ubuntu-base-18.04-base-amd64"
+var DefaultRootFsAbsPath string = filepath.Join(home, ".rootfs")
 
 //IsolationOpts : Linux syscall isolation options
 type IsolationOpts struct {
@@ -45,7 +48,8 @@ type ContainerOpts struct {
 
 func catchError(err error) {
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(0)
 	}
 }
 
@@ -53,14 +57,17 @@ func catchError(err error) {
 func ResolveRootFs(config *ContainerOpts) {
 	if config.RootFs == "default" {
 		fmt.Println("Setting ubuntu-base-18.04-base-amd64 as default rootfs image")
-		config.RootFs = DefaultRootFsAbsPath
+		config.RootFs = filepath.Join(DefaultRootFsAbsPath, "default")
+	} else {
+		fmt.Printf("Searching registry location for rootfs %s.", config.RootFs)
+		config.RootFs = filepath.Join(DefaultRootFsAbsPath, config.RootFs)
 	}
 
 	//check if the rootfs exist :
 	_, err := os.Stat(config.RootFs)
 	catchError(err)
 	if os.IsNotExist(err) {
-		fmt.Printf("[Error ]Rootfs %s not found, exiting runtime.\n", config.RootFs)
+		fmt.Printf("[Error] Rootfs %s not found, exiting runtime.\n", config.RootFs)
 		os.Exit(0)
 	}
 

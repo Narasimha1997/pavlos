@@ -12,7 +12,7 @@ import (
 
 func must(err error) {
 	if err != nil {
-		panic(err)
+		os.Exit(0)
 	}
 }
 func containerMust(err error) {
