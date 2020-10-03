@@ -48,5 +48,7 @@ func MakeContainerRuntime(config *ContainerOpts, konArgs []string) *exec.Cmd {
 		Unshareflags: syscall.CLONE_NEWNS, //Unshare the namespace
 	}
 
+	fmt.Println(command.String())
+
 	return command
 }

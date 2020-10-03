@@ -51,7 +51,9 @@ func makeNvidiaContainerRunime(options *ContainerOpts) {
 
 	for index := range options.Internals.NvidiaDeviceIndexes {
 		//fmt.Printf("Mapping GPU device %d\n", index)
+		fmt.Println("Binding GPU device driver with pavlos")
 		isolateGPUDevice(index, options.RootFs)
+		fmt.Printf("GPU %d now ready to be used by the container\n", index)
 	}
 }
 
@@ -66,6 +68,7 @@ func addDNS() {
 	must(err)
 
 	must(ioutil.WriteFile("etc/resolv.conf", input, 0664))
+	fmt.Println("Mounted host DNS into the container /etc/resolv.conf")
 }
 
 func prepareContainerLinux() {
@@ -101,13 +104,6 @@ func jsonToConfigs(jsonData string, containerConfig *ContainerOpts) {
 
 //CreateContainer : Main function that creates a container
 func CreateContainer(configFile string, fromFile bool) {
-	_, err := os.Stat(configFile)
-	catchError(err)
-
-	if os.IsNotExist(err) {
-		fmt.Printf("[Error ] Container config %s not found, exiting runtime.\n", configFile)
-		os.Exit(0)
-	}
 
 	options := LoadConfigFromJSON(configFile, fromFile)
 
@@ -127,6 +123,7 @@ func CreateContainer(configFile string, fromFile bool) {
 //ResolveRuntimeHooks : The function that resolves runtime hooks for container
 func ResolveRuntimeHooks(options *ContainerOpts) {
 	//More elegant hooks will be provided later
+	fmt.Println("Resolving runtime hardware hooks...")
 	makeNvidiaContainerRunime(options)
 }
 

@@ -138,7 +138,6 @@ func ProduceUnsupportedWarnings(config *ContainerOpts) {
 
 //LoadConfigFromJSON : Configuration loader
 func LoadConfigFromJSON(jsonFile string, fromFile bool) ContainerOpts {
-
 	if !fromFile {
 		jsonFile = filepath.Join(DefaultRootFsConfigPath, jsonFile)
 	}
