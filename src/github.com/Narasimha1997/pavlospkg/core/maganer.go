@@ -1,7 +1,6 @@
 package core
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -83,12 +82,12 @@ func runWget(name, url string) {
 }
 
 //DeleteRootFs : Deletes root-fs image
-func DeleteRootFs(name string) {
-	path := filepath.Join(RootFSRoot, name)
+func DeleteRootFs(name *string) {
+	path := filepath.Join(RootFSRoot, *name)
 
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
-		fmt.Printf("Registry %s not exists, so skipped deletion\n", name)
+		fmt.Printf("Registry %s not exists, so skipped deletion\n", *name)
 		os.Exit(0)
 	}
 
@@ -143,22 +142,9 @@ func ShowHelp() {
 }
 
 //CreateRootFs : creates a root-fs image, a series of prompts will be followed
-func CreateRootFs() {
-	reader := bufio.NewReader(os.Stdin)
-
-	fmt.Println("Enter the name of root-fs image")
-	rootfsName, err := reader.ReadString('\n')
-	registryPainc(err)
-
-	rootfsName = strings.Replace(rootfsName, "\n", "", 1)
-
-	fmt.Println("Enter the URL of root-fs image")
-	rootfsURL, err := reader.ReadString('\n')
-	registryPainc(err)
-
-	rootfsURL = strings.Replace(rootfsURL, "\n", "", 1)
-
-	setupRootFsImage(rootfsName, rootfsURL)
+func CreateRootFs(rootfsName *string, rootfsURI *string) {
+	setupRootFsImage(*rootfsName, *rootfsURI)
+	fmt.Println("Created rootfs " + *rootfsName)
 }
 
 //SetupDefault : Sets-up default root-fs image
@@ -170,7 +156,14 @@ func SetupDefault() {
 func SetupDefaultDir() {
 	_, err := os.Stat(RootFSRoot)
 	if os.IsNotExist(err) {
-		os.Mkdir(RootFSRoot, 0700)
+		err := os.MkdirAll(RootFSRoot, 0700)
+		registryPainc(err)
+	}
+
+	_, err = os.Stat(RootFSConfigPath)
+	if os.IsNotExist(err) {
+		err := os.MkdirAll(RootFSConfigPath, 0700)
+		registryPainc(err)
 	}
 }
 
@@ -199,20 +192,20 @@ func ListSavedConfigs() {
 	fmt.Println("Rootfs Configs")
 	fmt.Println("=====================")
 
-	for _, configName := range files {
-		fmt.Printf("%s\n", configName)
+	for _, config := range files {
+		fmt.Printf("%s\n", config.Name())
 	}
 }
 
 //CreateConfigFromFile : Creates config given a JSON file
-func CreateConfigFromFile(file string, rootfsName string) {
+func CreateConfigFromFile(file *string, rootfsName *string) {
 
-	if !pathExists(file) {
+	if !pathExists(*file) {
 		fmt.Printf("Configuration source file not found")
 		os.Exit(0)
 	}
 
-	jsonData, err := ioutil.ReadFile(file)
+	jsonData, err := ioutil.ReadFile(*file)
 	registryPainc(err)
 
 	options := ContainerOpts{}
@@ -220,26 +213,26 @@ func CreateConfigFromFile(file string, rootfsName string) {
 	json.Unmarshal([]byte(jsonData), &options)
 	registryPainc(err)
 
-	options.RootFs = rootfsName
+	options.RootFs = *rootfsName
 
 	//save file in registry location
 	byteData, err := json.Marshal(options)
 	registryPainc(err)
 
-	fpOutput := filepath.Join(RootFSConfigPath, rootfsName)
+	fpOutput := filepath.Join(RootFSConfigPath, *rootfsName)
 	err = ioutil.WriteFile(fpOutput, byteData, 0644)
 	registryPainc(err)
 
-	fmt.Printf("Successfully saved configuration %s\n.", rootfsName)
+	fmt.Printf("Successfully saved configuration %s.\n", *rootfsName)
 }
 
 //DeleteRootfsConfig : Delete RootFs configs
-func DeleteRootfsConfig(name string) {
-	path := filepath.Join(RootFSConfigPath, name)
+func DeleteRootfsConfig(name *string) {
+	path := filepath.Join(RootFSConfigPath, *name)
 	_, err := os.Stat(path)
 
 	if os.IsNotExist(err) {
-		fmt.Printf("Configuration %s does not exist", name)
+		fmt.Printf("Configuration %s does not exist", *name)
 		os.Exit(0)
 	}
 

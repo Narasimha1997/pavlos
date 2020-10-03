@@ -8,8 +8,8 @@
         "enableRoot" : true,
         "enableNetNs" : false
     },
-    "rootFs" : "alpine",
+    "rootFs" : "alpine-linux",
     "nvidiaGpus" : [],
     "ip" : "172.16.0.12",
-    "runtimeArgs" : ["/bin/bash"]
+    "runtimeArgs" : ["/bin/ash"]
 }
