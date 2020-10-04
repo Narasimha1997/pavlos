@@ -40,7 +40,6 @@ GOBIN=$(pwd)/bin
 go install github.com/Narasimha1997/pavlospkg
 ```
 
-Installation:
 ![pavlos-installation](./gifs/install.gif)
 
 ### How to emulate a rootfs with pavlos:
