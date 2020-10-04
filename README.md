@@ -40,6 +40,9 @@ GOBIN=$(pwd)/bin
 go install github.com/Narasimha1997/pavlospkg
 ```
 
+Installation:
+![pavlos-installation](./gifs/install.gif)
+
 ### How to emulate a rootfs with pavlos:
 1. Download and register the rootfs image using `pavlospkg`
 ```
@@ -48,6 +51,8 @@ sudo pavlospkg rootfs create \
         --uri=http://dl-cdn.alpinelinux.org/alpine/v3.12/releases/x86_64/alpine-minirootfs-3.12.0-x86_64.tar.gz
 ```
 
+![pavlos-rootfs](./gifs/pm.gif)
+
 2. Register your configuration for `alpine-linux`:
 We have provided examples under `examples/` directory which contains example configs for CPU and GPU based containers with pavlos. We will be using CPU config for our rootfs `alpine-linux`:
 ```
@@ -55,6 +60,8 @@ sudo pavlospkg config create \
         --name=alpine-linux \
         --file=examples/example-cpu.json
 ```
+
+![pavlos-config](./gifs/config.gif)
 
 3. Now you can list the available rootfs images:
 ```
@@ -94,6 +101,17 @@ Requested devices : []
 ===========================================
 / # 
 ```
+
+![pavlos-run-cpu](./gifs/run.gif)
+
+### Hooking GPUs at runtime:
+Pavlos supports NVIDIA GPUs, that means, you can use pavlos container with nvidia gpus. Look at `examples/example-gpu.json` to understand how to configure your image to detect GPUs. Pavlos uses `libnvidia-container` for GPU support.
+
+#### How GPU assignment works in pavlos??
+Pavlos scans PCI device tree to understand what GPUs are there on the host machine and then gives each GPU an integer ID and maintains the mapping internally, this is built in order to check for errors, if user hooks a GPU which is not present, pavlos throws error right away instead of creating a segmentation fault in `libnvidia-container`. If a GPU is found, then pavlos calls `nvidia-container-cli` and passes the device ID and other parameters to install the kernel module inside the container. Example of pavlos running GPU container is shown below:
+
+![pavlos-gpu](./gifs/gpu.gif)
+
 
 ### Roadmap : 
 1. SW defined container overaly networking (like CNI) (This functionality is broken as of now)
