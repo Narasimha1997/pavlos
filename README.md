@@ -101,6 +101,17 @@ Requested devices : []
 / # 
 ```
 
+#### Editing configuration files:
+`pavlospkg` has a support for editing config-files in place, to do so you have to call :
+```
+sudo pavlospkg config edit -n <config-name>
+```
+This will open basic `vi` editor by default, however you can use the editor of your choice, for thos purpose, `pavlospkg` looks at the env `EDITOR` during the start of `edit` command, if that env is empty, it invokes `vi` as the default editor, you can change the editor however by settign the `EDITOR` env to your favourite editor. Supported editors are `vi`, `vim`, `nano`, `gedit` and `pico`. For example, to invoke edit with `nano`, do :
+```
+export EDITOR=nano
+sudo -E pavlospkg config edit -n <config-name>
+```
+
 ![pavlos-run-cpu](./gifs/run.gif)
 
 ### Hooking GPUs at runtime:
