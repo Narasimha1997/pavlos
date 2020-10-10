@@ -52,6 +52,9 @@ func ParseCommandLineArgs(args []string) {
 	configsDelete := configs.NewCommand("delete", "Deletes a config from saved configs")
 	configsDelName := configsDelete.String("n", "name", &argparse.Options{Help: "Name of config file", Required: true})
 
+	configsEdit := configs.NewCommand("edit", "Edits a configuration file with vi, export EDITOR env variable targetting the custom editor you would like to use.")
+	configsEditName := configsEdit.String("n", "name", &argparse.Options{Help: "Name of the config file to edit"})
+
 	err := parserMain.Parse(args)
 	handleInvalidErrors(err, parserMain)
 
@@ -101,6 +104,16 @@ func ParseCommandLineArgs(args []string) {
 		}
 
 		DeleteRootfsConfig(configsDelName)
+		os.Exit(0)
+	}
+
+	if configs.Happened() && configsEdit.Happened() {
+		if *configsEditName == "" {
+			fmt.Printf("Did not provide config name.")
+			os.Exit(0)
+		}
+
+		EditRootfsConfig(configsEditName)
 		os.Exit(0)
 	}
 }

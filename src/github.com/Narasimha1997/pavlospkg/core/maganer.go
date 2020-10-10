@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,6 +16,15 @@ var RootFSRoot string = filepath.Join(os.Getenv("HOME"), ".rootfs/images")
 
 //RootFSConfigPath : Base filesystem path to save config details
 var RootFSConfigPath string = filepath.Join(os.Getenv("HOME"), ".rootfs/configs")
+
+//Editors : Commands that are supported by pavlospkg
+var Editors map[string]bool = map[string]bool{
+	"vi":    true,
+	"vim":   true,
+	"nano":  true,
+	"gedit": true,
+	"pico":  true,
+}
 
 //IsolationOpts : Linux syscall isolation options
 type IsolationOpts struct {
@@ -216,7 +226,7 @@ func CreateConfigFromFile(file *string, rootfsName *string) {
 	options.RootFs = *rootfsName
 
 	//save file in registry location
-	byteData, err := json.Marshal(options)
+	byteData, err := json.MarshalIndent(options, "", "   ")
 	registryPainc(err)
 
 	fpOutput := filepath.Join(RootFSConfigPath, *rootfsName)
@@ -224,6 +234,19 @@ func CreateConfigFromFile(file *string, rootfsName *string) {
 	registryPainc(err)
 
 	fmt.Printf("Successfully saved configuration %s.\n", *rootfsName)
+}
+
+func getEditor() string {
+	command, hasEnv := os.LookupEnv("EDITOR")
+	if !hasEnv {
+		return "vi"
+	}
+
+	//Do O(1) search if the command entered by the user is a supported editor
+	if _, exists := Editors[command]; exists {
+		return command
+	}
+	return "vi"
 }
 
 //DeleteRootfsConfig : Delete RootFs configs
@@ -238,4 +261,37 @@ func DeleteRootfsConfig(name *string) {
 
 	registryPainc(os.RemoveAll(path))
 	fmt.Printf("deleted %s\n", path)
+}
+
+//EditRootfsConfig : Edit the configuration files in place using vi
+func EditRootfsConfig(name *string) {
+	path := filepath.Join(RootFSConfigPath, *name)
+	oldInfo, err := os.Stat(path)
+
+	editor := getEditor()
+
+	if os.IsNotExist(err) {
+		fmt.Printf("Configuration file %s not found.\n", *name)
+		os.Exit(0)
+	}
+
+	//open up the file in Vi-editor as a sub-command:
+	viHandler := exec.Command(editor, path)
+	viHandler.Stderr = os.Stderr
+	viHandler.Stdout = os.Stdout
+	viHandler.Stdin = os.Stdin
+
+	registryPainc(viHandler.Run())
+
+	//check if any changes were made during the session:
+	newInfo, err := os.Stat(path)
+	registryPainc(err)
+
+	changedBytes := math.Abs(float64(newInfo.Size() - oldInfo.Size()))
+
+	if changedBytes == 0 {
+		fmt.Printf("No changes were made to %s\n", *name)
+	} else {
+		fmt.Printf("Chaned %s by %d bytes, saved new config.\n", *name, int64(changedBytes))
+	}
 }
