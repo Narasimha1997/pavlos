@@ -100,6 +100,8 @@ Requested devices : []
 ===========================================
 / # 
 ```
+![pavlos-run-cpu](./gifs/run.gif)
+
 
 #### Editing configuration files:
 `pavlospkg` has a support for editing config-files in place, to do so you have to call :
@@ -111,9 +113,6 @@ This will open basic `vi` editor by default, however you can use the editor of y
 export EDITOR=nano
 sudo -E pavlospkg config edit -n <config-name>
 ```
-
-![pavlos-run-cpu](./gifs/run.gif)
-
 ### Hooking GPUs at runtime:
 Pavlos supports NVIDIA GPUs, that means, you can use pavlos container with nvidia gpus. Look at `examples/example-gpu.json` to understand how to configure your image to detect GPUs. Pavlos uses `libnvidia-container` for GPU support.
 
